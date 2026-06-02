@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.env
+local_game.db
+
+# Virtual environments
+venv/
+.venv/
+env/
+
