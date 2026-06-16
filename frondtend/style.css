@@ -1,0 +1,51 @@
+:root {
+    --bg-main: #0a0e17;
+    --bg-surface: #111827;
+    --bg-surface-elevated: #1a2234;
+    --border-glow: rgba(255, 255, 255, 0.1);
+    
+    /* Цвета стихий */
+    --elem-fire: #ff4757;
+    --elem-fire-glow: rgba(255, 71, 87, 0.4);
+    --elem-grass: #2ed573;
+    --elem-grass-glow: rgba(46, 213, 115, 0.4);
+    --elem-water: #1e90ff;
+    --elem-water-glow: rgba(30, 144, 255, 0.4);
+    --elem-earth: #eccc68;
+    --elem-earth-glow: rgba(236, 204, 104, 0.4);
+
+    /* Акценты */
+    --accent-primary: #8b5cf6;
+    --accent-gold: #f59e0b;
+    --accent-red: #ef4444;
+    --accent-green: #10b981;
+
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --text-dim: #64748b;
+
+    --font-heading: 'Cinzel', serif;
+    --font-body: 'Outfit', -apple-system, sans-serif;
+    --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--bg-main);
+    background-image: 
+        radial-gradient(circle at 15% 15%, rgba(139, 92, 246, 0.09) 0%, transparent 40%),
+        radial-gradient(circle at 85% 85%, rgba(30, 144, 255, 0.09) 0%, transparent 40%),
+        linear-gradient(180deg, #070a10 0%, #0d131f 100%);
+    color: var(--text-main);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+}
+

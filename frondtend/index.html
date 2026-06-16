@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Покемон-баттл: Стихийные Сражения (Oracle RPG)</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app" class="app-container">
+        <!-- ГЛАВНАЯ ШАПКА -->
+        <header class="main-header">
+            <div class="logo-group">
+                <span class="logo-badge">RPG 2.0</span>
+                <h1 class="logo-title">ПОКЕМОН-БАТТЛ</h1>
+                <span class="logo-sub">Oracle Edition</span>
+            </div>
+            
+            <div id="header-user-info" class="header-user hidden">
+                <div class="user-badge">
+                    <span class="user-avatar-mini">🧙‍♂️</span>
+                    <div>
+                        <span id="header-username" class="user-name">Тренер</span>
+                        <div class="user-sub-stats">
+                            <span class="stat-pill-coin">🪙 <b id="header-coins">0</b></span>
+                            <span class="stat-pill-elo">🏆 <b id="header-elo">1000</b></span>
+                            <span class="role-pill">GAME_PLAYER_ROLE</span>
+                        </div>
+                    </div>
+                </div>
+                <button id="btn-logout" class="btn-sm btn-outline">Выйти</button>
+            </div>
+        </header>
+
+</body>
+</html>
