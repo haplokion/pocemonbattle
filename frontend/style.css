@@ -1,0 +1,510 @@
+/*
+ * Базовые стили прототипа «Покемон-баттл».
+ * Реконструированная ранняя версия.
+ */
+
+:root {
+    --bg-color: #101827;
+    --panel-color: #1b2638;
+    --panel-light: #243248;
+    --border-color: #35445c;
+
+    --primary-color: #5865f2;
+    --primary-hover: #4752c4;
+    --success-color: #35b779;
+    --danger-color: #e05252;
+
+    --text-color: #f5f7fa;
+    --muted-color: #aab4c3;
+
+    --font-family: Arial, sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    min-height: 100vh;
+    background: var(--bg-color);
+    color: var(--text-color);
+    font-family: var(--font-family);
+}
+
+button,
+input {
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+.app-container {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Шапка приложения */
+
+.main-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+
+    background: var(--panel-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+}
+
+.logo-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo-title {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.logo-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    background: #e6a23c;
+    color: #202020;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.logo-sub {
+    color: var(--muted-color);
+    font-size: 13px;
+}
+
+.header-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.user-badge {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+}
+
+.user-name {
+    display: block;
+    font-weight: bold;
+}
+
+.user-sub-stats {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+    color: var(--muted-color);
+    font-size: 12px;
+}
+
+/* Навигация */
+
+.main-nav {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 20px;
+    padding: 6px;
+
+    background: var(--panel-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+}
+
+.nav-tab {
+    padding: 9px 14px;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    color: var(--muted-color);
+}
+
+.nav-tab:hover {
+    background: var(--panel-light);
+    color: var(--text-color);
+}
+
+.nav-tab.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* Экраны */
+
+.screen {
+    display: none;
+}
+
+.screen.active {
+    display: block;
+}
+
+.glass-panel {
+    padding: 24px;
+    background: var(--panel-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+}
+
+/* Авторизация */
+
+.auth-wrapper {
+    width: 100%;
+    max-width: 430px;
+    margin: 50px auto;
+}
+
+.auth-tabs {
+    display: flex;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.auth-tab {
+    flex: 1;
+    padding: 12px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    color: var(--muted-color);
+}
+
+.auth-tab.active {
+    border-bottom-color: var(--primary-color);
+    color: white;
+}
+
+.auth-pane {
+    display: none;
+}
+
+.auth-pane.active {
+    display: block;
+}
+
+.auth-pane h2 {
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.subtitle {
+    margin-bottom: 20px;
+    color: var(--muted-color);
+    text-align: center;
+    line-height: 1.4;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.input-group label {
+    color: var(--muted-color);
+    font-size: 14px;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 10px;
+
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    outline: none;
+
+    background: #111a29;
+    color: white;
+}
+
+.input-group input:focus {
+    border-color: var(--primary-color);
+}
+
+.starter-selection-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.starter-choice input {
+    display: none;
+}
+
+.starter-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--panel-light);
+    text-align: center;
+}
+
+.starter-choice input:checked + .starter-box {
+    border-color: var(--primary-color);
+    background: #303b70;
+}
+
+.starter-ico {
+    font-size: 24px;
+}
+
+/* Кнопки */
+
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+
+    padding: 10px 16px;
+    border: 0;
+    border-radius: 5px;
+
+    background: var(--primary-color);
+    color: white;
+    font-weight: bold;
+}
+
+.btn-primary:hover {
+    background: var(--primary-hover);
+}
+
+.btn-block {
+    width: 100%;
+}
+
+.btn-outline {
+    padding: 9px 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    background: transparent;
+    color: var(--text-color);
+}
+
+.btn-outline:hover {
+    background: var(--panel-light);
+}
+
+.btn-sm {
+    padding: 6px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--panel-light);
+    color: white;
+    font-size: 13px;
+}
+
+.status-box {
+    margin-top: 16px;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.status-box.success {
+    background: #183d32;
+    color: #65d6a0;
+}
+
+.status-box.error {
+    background: #452525;
+    color: #ff8d8d;
+}
+
+/* Профиль */
+
+.profile-layout {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 16px;
+}
+
+.profile-card,
+.unlocks-card {
+    padding: 20px;
+    background: var(--panel-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+}
+
+.profile-header-banner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.profile-avatar-big {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 56px;
+    height: 56px;
+    border-radius: 8px;
+
+    background: var(--primary-color);
+    font-size: 28px;
+}
+
+.profile-badges-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.badge-role,
+.badge-league {
+    padding: 3px 7px;
+    border-radius: 4px;
+    background: var(--panel-light);
+    color: var(--muted-color);
+    font-size: 11px;
+}
+
+.exp-section {
+    margin-bottom: 18px;
+}
+
+.exp-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    color: var(--muted-color);
+    font-size: 13px;
+}
+
+.exp-bar-track {
+    height: 10px;
+    overflow: hidden;
+    border-radius: 5px;
+    background: #0c121d;
+}
+
+.exp-bar-fill {
+    height: 100%;
+    background: var(--primary-color);
+}
+
+.profile-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.pstat-item {
+    padding: 10px;
+    border-radius: 5px;
+    background: var(--panel-light);
+    text-align: center;
+}
+
+.pstat-val {
+    display: block;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.pstat-lbl {
+    color: var(--muted-color);
+    font-size: 12px;
+}
+
+/* Карточки существ */
+
+.editor-grid,
+.heroes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+}
+
+.editor-card,
+.hero-unlock-card {
+    padding: 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 7px;
+    background: var(--panel-light);
+}
+
+.editor-card.in-team {
+    border-color: var(--success-color);
+}
+
+.hero-unlock-card.locked {
+    opacity: 0.5;
+}
+
+.editor-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.nickname-edit-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 12px;
+}
+
+.nickname-input {
+    min-width: 0;
+    flex: 1;
+    padding: 7px;
+
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: #111a29;
+    color: white;
+}
+
+/* Простая адаптация под мобильные экраны */
+
+@media (max-width: 700px) {
+    .app-container {
+        padding: 10px;
+    }
+
+    .main-header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .main-nav {
+        overflow-x: auto;
+    }
+
+    .profile-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .logo-title {
+        font-size: 20px;
+    }
+}

@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Покемон-баттл</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div id="app" class="app-container">
+        <header class="main-header">
+            <div class="logo-group">
+                <span class="logo-badge">RPG</span>
+                <h1 class="logo-title">Покемон-баттл</h1>
+                <span class="logo-sub">Prototype</span>
+            </div>
+
+            <div id="header-user-info" class="header-user" hidden>
+                <div class="user-badge">
+                    <span class="user-avatar-mini">🧑</span>
+                    <div>
+                        <span id="header-username" class="user-name">Тренер</span>
+                        <div class="user-sub-stats">
+                            <span>Монеты: <b id="header-coins">0</b></span>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="btn-logout" class="btn-sm btn-outline">
+                    Выйти
+                </button>
+            </div>
+        </header>
+
+        <nav id="main-nav" class="main-nav" hidden>
+            <button
+                class="nav-tab active"
+                data-tab="screen-lobby"
+                type="button">
+                Арена
+            </button>
+
+            <button
+                class="nav-tab"
+                data-tab="screen-profile"
+                type="button">
+                Профиль
+            </button>
+
+            <button
+                class="nav-tab"
+                data-tab="screen-pokemon"
+                type="button">
+                Мои покемоны
+            </button>
+        </nav>
+
+        <main>
+            <section id="screen-login" class="screen active">
+                <div class="auth-wrapper glass-panel">
+                    <div class="auth-tabs">
+                        <button
+                            id="tab-auth-login"
+                            class="auth-tab active"
+                            type="button"
+                            onclick="switchAuthTab('login')">
+                            Вход
+                        </button>
+
+                        <button
+                            id="tab-auth-register"
+                            class="auth-tab"
+                            type="button"
+                            onclick="switchAuthTab('register')">
+                            Регистрация
+                        </button>
+                    </div>
+
+                    <div id="pane-login" class="auth-pane active">
+                        <div class="auth-icon-ring">
+                            🛡️
+                        </div>
+
+                        <h2>Вход в игру</h2>
+
+                        <p class="subtitle">
+                            Введите данные тренера, чтобы продолжить
+                        </p>
+
+                        <form id="form-login" class="auth-form">
+                            <div class="input-group">
+                                <label for="input-username">
+                                    Имя пользователя
+                                </label>
+
+                                <input
+                                    id="input-username"
+                                    name="username"
+                                    type="text"
+                                    placeholder="Например: PLAYER1"
+                                    required>
+                            </div>
+
+                            <div class="input-group">
+                                <label for="input-password">
+                                    Пароль
+                                </label>
+
+                                <input
+                                    id="input-password"
+                                    name="password"
+                                    type="password"
+                                    placeholder="Введите пароль"
+                                    required>
+                            </div>
+
+                            <button
+                                type="submit"
+                                class="btn-primary btn-block">
+                                Войти
+                            </button>
+                        </form>
+                    </div>
+
+                    <div id="pane-register" class="auth-pane">
+                        <div class="auth-icon-ring ring-nature">
+                            ⚡
+                        </div>
+
+                        <h2>Новый тренер</h2>
+
+                        <p class="subtitle">
+                            Создайте аккаунт и выберите первого покемона
+                        </p>
+
+                        <form id="form-register" class="auth-form">
+                            <div class="input-group">
+                                <label for="reg-username">
+                                    Имя пользователя
+                                </label>
+
+                                <input
+                                    id="reg-username"
+                                    name="username"
+                                    type="text"
+                                    placeholder="Например: MISTY"
+                                    required>
+                            </div>
+
+                            <div class="input-group">
+                                <label for="reg-display-name">
+                                    Имя тренера
+                                </label>
+
+                                <input
+                                    id="reg-display-name"
+                                    name="display_name"
+                                    type="text"
+                                    placeholder="Как вас будут видеть другие игроки"
+                                    required>
+                            </div>
+
+                            <div class="input-group">
+                                <label for="reg-password">
+                                    Пароль
+                                </label>
+
+                                <input
+                                    id="reg-password"
+                                    name="password"
+                                    type="password"
+                                    placeholder="Придумайте пароль"
+                                    required>
+                            </div>
+
+                            <div class="input-group">
+                                <label for="starter-pokemon">
+                                    Стартовый покемон
+                                </label>
+
+                                <select
+                                    id="starter-pokemon"
+                                    name="starter_template_id"
+                                    required>
+                                    <option value="1">
+                                        Игнизавр — огонь
+                                    </option>
+                                    <option value="6">
+                                        Листокрыл — трава
+                                    </option>
+                                    <option value="11">
+                                        Аквадонт — вода
+                                    </option>
+                                    <option value="16">
+                                        Террагот — земля
+                                    </option>
+                                </select>
+                            </div>
+
+                            <button
+                                type="submit"
+                                class="btn-primary btn-block">
+                                Зарегистрироваться
+                            </button>
+                        </form>
+                    </div>
+
+                    <div id="login-status-box" class="status-box" hidden></div>
+                </div>
+            </section>
+
+            <section id="screen-lobby" class="screen">
+                <div class="profile-layout">
+                    <div class="profile-card">
+                        <h2>Арена</h2>
+
+                        <p class="subtitle">
+                            Здесь будут находиться доступные игровые режимы.
+                        </p>
+
+                        <button
+                            id="btn-create-battle"
+                            class="btn-primary btn-block"
+                            type="button">
+                            Создать бой
+                        </button>
+
+                        <button
+                            id="btn-bot-battle"
+                            class="btn-outline btn-block"
+                            type="button">
+                            Бой с ботом
+                        </button>
+                    </div>
+
+                    <div class="unlocks-card">
+                        <h2>Открытые игры</h2>
+
+                        <div id="battles-list">
+                            <p class="subtitle">
+                                Пока нет открытых боёв.
+                            </p>
+                        </div>
+
+                        <button
+                            id="btn-refresh-battles"
+                            class="btn-sm btn-outline"
+                            type="button">
+                            Обновить список
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="screen-profile" class="screen">
+                <div class="profile-card">
+                    <div class="profile-header-banner">
+                        <div class="profile-avatar-big">
+                            🧑
+                        </div>
+
+                        <div>
+                            <h2 id="prof-display-name">
+                                Имя тренера
+                            </h2>
+
+                            <div class="profile-badges-row">
+                                <span class="badge-role">
+                                    Тренер
+                                </span>
+
+                                <span class="badge-league">
+                                    Новичок
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="profile-stats-grid">
+                        <div class="pstat-item">
+                            <span
+                                id="profile-level"
+                                class="pstat-val">
+                                1
+                            </span>
+
+                            <span class="pstat-lbl">
+                                Уровень
+                            </span>
+                        </div>
+
+                        <div class="pstat-item">
+                            <span
+                                id="profile-wins"
+                                class="pstat-val">
+                                0
+                            </span>
+
+                            <span class="pstat-lbl">
+                                Победы
+                            </span>
+                        </div>
+
+                        <div class="pstat-item">
+                            <span
+                                id="profile-losses"
+                                class="pstat-val">
+                                0
+                            </span>
+
+                            <span class="pstat-lbl">
+                                Поражения
+                            </span>
+                        </div>
+
+                        <div class="pstat-item">
+                            <span
+                                id="profile-coins"
+                                class="pstat-val">
+                                0
+                            </span>
+
+                            <span class="pstat-lbl">
+                                Монеты
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="screen-pokemon" class="screen">
+                <div class="unlocks-card">
+                    <div class="panel-header">
+                        <h2>Мои покемоны</h2>
+
+                        <button
+                            id="btn-refresh-pokemon"
+                            class="btn-sm btn-outline"
+                            type="button">
+                            Обновить
+                        </button>
+                    </div>
+
+                    <div
+                        id="my-pokemon-list"
+                        class="heroes-grid">
+                        <div class="hero-unlock-card">
+                            <div class="profile-avatar-big">
+                                🐾
+                            </div>
+
+                            <div>
+                                <h3>Покемоны не загружены</h3>
+                                <p class="subtitle">
+                                    Войдите в игру, чтобы увидеть команду.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
