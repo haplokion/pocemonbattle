@@ -1,4 +1,9 @@
-onst state = {
+/**
+ * ПОКЕМОН-БАТТЛ 2.0: Клиентское приложение (Oracle RPG)
+ * Регистрация, Профиль, Редактор, Пасхалка таблицы умножения, Ловля, Эволюция, Elo
+ */
+
+const state = {
     user: null,
     profile: null,
     battleId: null,
@@ -407,6 +412,10 @@ async function joinBattle(battleId) {
         alert('Ошибка: ' + e.message);
     }
 }
+
+// =========================================================================
+// ЭКРАН 2: ПРОФИЛЬ, ИНВЕНТАРЬ И ОТКРЫТЫЕ ГЕРОИ
+// =========================================================================
 async function loadProfileData() {
     if (!state.user) return;
     try {
@@ -477,6 +486,10 @@ async function loadProfileData() {
         console.error('Ошибка профиля:', e);
     }
 }
+
+// =========================================================================
+// ЭКРАН 3: РЕДАКТОР КОМАНДЫ И ЭВОЛЮЦИЯ
+// =========================================================================
 async function loadEditorData() {
     if (!state.user) return;
     try {
@@ -591,6 +604,10 @@ async function evolveCreature(creatureId) {
         }
     } catch (e) { alert(e.message); }
 }
+
+// =========================================================================
+// ЭКРАН 4: АЛТАРЬ ЛОВЛИ
+// =========================================================================
 async function loadCatchAltarData() {
     await loadProfileSummary();
     if (state.profile) {
@@ -617,3 +634,447 @@ async function doCatchCreature() {
         document.getElementById('header-coins').textContent = data.remaining_coins;
     } catch (e) { alert(e.message); }
 }
+
+// =========================================================================
+// ЭКРАН 5: ПАСХАЛКА (ТАБЛИЦА УМНОЖЕНИЯ)
+// =========================================================================
+async function loadMathChallenge() {
+    try {
+        const res = await fetch('/api/training/math-challenge');
+        const data = await res.json();
+        state.mathNum1 = data.num1;
+        state.mathNum2 = data.num2;
+        document.getElementById('math-num1').textContent = data.num1;
+        document.getElementById('math-num2').textContent = data.num2;
+        document.getElementById('input-math-answer').value = '';
+        document.getElementById('input-math-answer').focus();
+    } catch (e) { console.error(e); }
+}
+
+async function handleMathSubmit(e) {
+    e.preventDefault();
+    const answer = parseInt(document.getElementById('input-math-answer').value);
+    const feedback = document.getElementById('math-feedback');
+    feedback.classList.add('hidden');
+
+    try {
+        const res = await fetch('/api/training/math-solve', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                player_id: state.user.player_id,
+                num1: state.mathNum1,
+                num2: state.mathNum2,
+                answer: answer
+            })
+        });
+        const data = await res.json();
+
+        if (data.correct) {
+            state.mathStreak += 1;
+            feedback.className = 'status-box success';
+        } else {
+            state.mathStreak = 0;
+            feedback.className = 'status-box error';
+        }
+
+        document.getElementById('math-streak').textContent = `${state.mathStreak} 🔥`;
+        feedback.textContent = data.message;
+        feedback.classList.remove('hidden');
+
+        // Обновляем статистику в шапке
+        loadProfileSummary();
+
+        // Загружаем следующий случайный пример через 1 секунду
+        setTimeout(loadMathChallenge, 1200);
+
+    } catch (e) { alert(e.message); }
+}
+
+// =========================================================================
+// ЭКРАН 6: ТАБЛИЦА ЛИДЕРОВ (LEADERBOARD)
+// =========================================================================
+async function loadLeaderboard() {
+    try {
+        const res = await fetch('/api/leaderboard');
+        const list = await res.json();
+        const tbody = document.getElementById('leaderboard-tbody');
+
+        tbody.innerHTML = list.map(item => {
+            let rankClass = '';
+            if (item.rank === 1) rankClass = 'rank-gold';
+            else if (item.rank === 2) rankClass = 'rank-silver';
+            else if (item.rank === 3) rankClass = 'rank-bronze';
+
+            return `
+                <tr>
+                    <td class="${rankClass}">#${item.rank}</td>
+                    <td><strong>${item.display_name}</strong> (${item.db_username})</td>
+                    <td>Ур. ${item.level}</td>
+                    <td><span class="league-pill league-${item.season_rank}">${item.season_rank}</span></td>
+                    <td><b>${item.elo_rating}</b> 🛡️</td>
+                    <td>${item.battles_won}W / ${item.battles_lost}L</td>
+                    <td>${item.win_rate}%</td>
+                </tr>
+            `;
+        }).join('');
+    } catch (e) { console.error(e); }
+}
+
+// =========================================================================
+// ЭКРАН 7: БОЕВАЯ АРЕНА (1 НА 1)
+// =========================================================================
+function openBattle(battleId) {
+    state.battleId = battleId;
+    state.selectedAttackerId = null;
+    state.selectedTargetId = null;
+
+    showScreen('screen-battle');
+    document.getElementById('battle-display-id').textContent = battleId;
+
+    pollBattleState();
+    startPolling();
+}
+
+function leaveBattle() {
+    stopPolling();
+    state.battleId = null;
+    state.selectedAttackerId = null;
+    state.selectedTargetId = null;
+    switchNavTab('screen-lobby');
+}
+
+function returnToLobby() {
+    document.getElementById('modal-gameover').classList.add('hidden');
+    leaveBattle();
+}
+
+function startPolling() {
+    stopPolling();
+    state.pollingTimer = setInterval(pollBattleState, 1500);
+}
+
+function stopPolling() {
+    if (state.pollingTimer) {
+        clearInterval(state.pollingTimer);
+        state.pollingTimer = null;
+    }
+}
+
+async function pollBattleState() {
+    if (!state.battleId) return;
+    try {
+        const res = await fetch(`/api/battles/${state.battleId}`);
+        if (!res.ok) return;
+        const battle = await res.json();
+        state.battleState = battle;
+        renderBattleArena(battle);
+    } catch (e) { console.error(e); }
+}
+
+function renderBattleArena(battle) {
+    document.getElementById('battle-turn-num').textContent = battle.turn_number;
+
+    const myPlayerId = state.user.player_id;
+    const isP1 = (battle.player1.player_id === myPlayerId);
+
+    const mySideCreatures = isP1 ? battle.player1_creatures : battle.player2_creatures;
+    const enemySideCreatures = isP1 ? battle.player2_creatures : battle.player1_creatures;
+
+    const myName = isP1 ? battle.player1.display_name : (battle.player2 ? battle.player2.display_name : 'Вы');
+    const enemyName = isP1 ? (battle.player2 ? battle.player2.display_name : 'Ожидание соперника...') : battle.player1.display_name;
+
+    document.getElementById('player-name').textContent = myName + ' (Ваша команда)';
+    document.getElementById('opponent-name').textContent = enemyName;
+
+    const turnIndicator = document.getElementById('battle-turn-indicator');
+    const isMyTurn = (battle.current_turn_player_id === myPlayerId && battle.status === 'IN_PROGRESS');
+
+    if (battle.status === 'WAITING') {
+        turnIndicator.className = 'turn-indicator';
+        turnIndicator.textContent = '⏳ Ожидание подключения второго игрока...';
+    } else if (battle.status === 'FINISHED') {
+        turnIndicator.className = 'turn-indicator';
+        turnIndicator.textContent = '🏁 Битва завершена!';
+    } else if (isMyTurn) {
+        turnIndicator.className = 'turn-indicator my-turn';
+        turnIndicator.textContent = '⚡ ВАШ ХОД! Выберите атакующего и цель';
+    } else {
+        turnIndicator.className = 'turn-indicator enemy-turn';
+        turnIndicator.textContent = '🛡️ Ход соперника... Ожидайте';
+    }
+
+    renderCreaturesGrid('player-creatures-grid', mySideCreatures, true);
+    renderCreaturesGrid('opponent-creatures-grid', enemySideCreatures, false);
+    renderCombatLog(battle.turns);
+
+    if (battle.status === 'FINISHED') {
+        stopPolling();
+        showGameOverModal(battle.winner_id === myPlayerId);
+    }
+
+    updateActionButtons(isMyTurn, mySideCreatures, enemySideCreatures);
+}
+
+function renderCreaturesGrid(elementId, creatures, isPlayerSide) {
+    const container = document.getElementById(elementId);
+    if (!creatures || creatures.length === 0) {
+        container.innerHTML = `<div class="empty-state">${isPlayerSide ? 'Нет существ' : 'Ожидание соперника...'}</div>`;
+        return;
+    }
+
+    container.innerHTML = creatures.map(c => {
+        const isFainted = c.is_fainted === 1 || c.current_hp <= 0;
+        const hpPercent = Math.max(0, Math.min(100, Math.round((c.current_hp / c.max_hp) * 100)));
+        let hpClass = '';
+        if (hpPercent <= 25) hpClass = 'hp-low';
+        else if (hpPercent <= 50) hpClass = 'hp-mid';
+
+        const isSelected = isPlayerSide 
+            ? (state.selectedAttackerId === c.battle_creature_id)
+            : (state.selectedTargetId === c.battle_creature_id);
+
+        const selectClass = isSelected ? (isPlayerSide ? 'selected-attacker' : 'selected-target') : '';
+        const faintedClass = isFainted ? 'fainted' : '';
+        const meta = ELEMENT_META[c.element_id] || { icon: '⚡', class: 'avatar-fire' };
+        const creatureIcon = getCreatureIcon(c.name, c.element_id);
+
+        return `
+            <div class="arena-card ${selectClass} ${faintedClass}" 
+                 onclick="handleCreatureSelect(${c.battle_creature_id}, ${isPlayerSide}, ${isFainted})">
+                ${isFainted ? '<div class="fainted-overlay">ПОВЕРЖЕН</div>' : ''}
+                <div class="creature-avatar ${meta.class}">
+                    ${creatureIcon}
+                </div>
+                <div class="arena-card-body">
+                    <div class="arena-card-header">
+                        <span class="arena-card-name">${c.name}</span>
+                        <span class="elem-badge ${c.element_id}">${c.element_id}</span>
+                    </div>
+                    <div class="hp-bar-container">
+                        <div class="hp-labels">
+                            <span>HP</span>
+                            <span>${c.current_hp} / ${c.max_hp} (${hpPercent}%)</span>
+                        </div>
+                        <div class="hp-track">
+                            <div class="hp-fill ${hpClass}" style="width: ${hpPercent}%"></div>
+                        </div>
+                    </div>
+                    <div class="creature-stats-row">
+                        <span>⚔️ ${c.attack}</span>
+                        <span>🛡️ ${c.defense}</span>
+                        <span>⚡ ${c.speed}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function handleCreatureSelect(creatureId, isPlayerSide, isFainted) {
+    if (isFainted) return;
+    if (isPlayerSide) state.selectedAttackerId = creatureId;
+    else state.selectedTargetId = creatureId;
+
+    if (state.battleState) renderBattleArena(state.battleState);
+}
+
+function updateActionButtons(isMyTurn, myCreatures, enemyCreatures) {
+    const btnAttack = document.getElementById('btn-action-attack');
+    const btnHeal = document.getElementById('btn-action-heal');
+    const btnSurrenderAction = document.getElementById('btn-action-surrender');
+    const hint = document.getElementById('selected-creatures-hint');
+    const preview = document.getElementById('elem-preview-text');
+
+    // Проверяем живы ли текущие выбранные существа, иначе автоматически переключаем
+    let attacker = myCreatures?.find(c => c.battle_creature_id === state.selectedAttackerId);
+    if (!attacker || attacker.is_fainted || attacker.current_hp <= 0) {
+        const firstAlive = myCreatures?.find(c => !c.is_fainted && c.current_hp > 0);
+        state.selectedAttackerId = firstAlive ? firstAlive.battle_creature_id : null;
+        attacker = firstAlive;
+    }
+
+    let target = enemyCreatures?.find(c => c.battle_creature_id === state.selectedTargetId);
+    if (!target || target.is_fainted || target.current_hp <= 0) {
+        const firstEnemyAlive = enemyCreatures?.find(c => !c.is_fainted && c.current_hp > 0);
+        state.selectedTargetId = firstEnemyAlive ? firstEnemyAlive.battle_creature_id : null;
+        target = firstEnemyAlive;
+    }
+
+    if (attacker && target) {
+        hint.textContent = `Атакующий: ${attacker.name} ➔ Цель: ${target.name}`;
+        const mult = getPreviewMultiplier(attacker.element_id, target.element_id);
+        if (mult >= 1.4) {
+            preview.textContent = `Бонус стихии: x${mult} (Сверхэффективно!) 🔥`;
+        } else if (mult <= 0.75) {
+            preview.textContent = `Штраф стихии: x${mult} (Слабая атака) 🛡️`;
+        } else {
+            preview.textContent = `Стандартный урон: x${mult}`;
+        }
+    } else {
+        hint.textContent = 'Выберите атакующее существо и цель для удара';
+        preview.textContent = 'Урон с учётом стихий';
+    }
+
+    const canAttack = isMyTurn && attacker && target && !attacker.is_fainted && !target.is_fainted;
+    btnAttack.disabled = !canAttack;
+    btnHeal.disabled = !isMyTurn || !attacker;
+    if (btnSurrenderAction) {
+        btnSurrenderAction.disabled = (state.battleState?.status === 'FINISHED');
+    }
+}
+
+function getPreviewMultiplier(atkElem, defElem) {
+    const matrix = {
+        FIRE: { GRASS: 1.5, WATER: 0.7, EARTH: 1.1, FIRE: 1.0 },
+        GRASS: { WATER: 1.5, EARTH: 1.4, FIRE: 0.7, GRASS: 1.0 },
+        WATER: { FIRE: 1.5, EARTH: 1.2, GRASS: 0.7, WATER: 1.0 },
+        EARTH: { FIRE: 1.4, GRASS: 0.7, WATER: 1.0, EARTH: 1.0 }
+    };
+    return matrix[atkElem]?.[defElem] || 1.0;
+}
+
+function renderCombatLog(turns) {
+    const container = document.getElementById('combat-log-content');
+    if (!turns || turns.length === 0) {
+        container.innerHTML = '<div class="log-entry system">Бой начался!</div>';
+        return;
+    }
+
+    container.innerHTML = turns.map(t => {
+        let entryClass = 'hit';
+        if (!t.is_hit) entryClass = 'miss';
+        else if (t.is_critical) entryClass = 'crit';
+
+        return `
+            <div class="log-entry ${entryClass}">
+                <strong>[Ход ${t.turn_number}]</strong> ${t.message}
+            </div>
+        `;
+    }).join('');
+}
+
+async function executeAttack() {
+    if (!state.battleId || !state.selectedAttackerId || !state.selectedTargetId) return;
+    const btnAttack = document.getElementById('btn-action-attack');
+    btnAttack.disabled = true;
+
+    try {
+        const res = await fetch(`/api/battles/${state.battleId}/attack`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                actor_player_id: state.user.player_id,
+                actor_creature_id: state.selectedAttackerId,
+                target_creature_id: state.selectedTargetId,
+                action_type: 'ELEMENTAL_ATTACK'
+            })
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+            alert(data.detail || 'Не удалось совершить атаку');
+            return;
+        }
+
+        await pollBattleState();
+    } catch (e) { alert('Ошибка атаки: ' + e.message); }
+}
+
+async function useHealItem() {
+    if (!state.battleId || !state.selectedAttackerId) return;
+
+    try {
+        const res = await fetch(`/api/battles/${state.battleId}/use_item`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                player_id: state.user.player_id,
+                item_id: 1,
+                target_creature_id: state.selectedAttackerId
+            })
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+            alert(data.detail || 'Ошибка');
+            return;
+        }
+
+        alert(data.message);
+        await pollBattleState();
+    } catch (e) { alert('Ошибка зелья: ' + e.message); }
+}
+
+async function surrenderBattle() {
+    if (!state.battleId || !state.user) return;
+
+    // Если бой в режиме ожидания (соперник ещё не зашёл)
+    if (state.battleState && state.battleState.status === 'WAITING') {
+        const confCancel = confirm('Соперник ещё не подключился. Отменить поиск боя?');
+        if (!confCancel) return;
+        try {
+            await fetch(`/api/battles/${state.battleId}/surrender`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ player_id: state.user.player_id })
+            });
+            leaveBattle();
+            return;
+        } catch (e) {
+            leaveBattle();
+            return;
+        }
+    }
+
+    const confirmed = confirm('Вы действительно хотите сдаться досрочно? Вам будет засчитано гарантированное поражение со снижением рейтинга Elo.');
+    if (!confirmed) return;
+
+    try {
+        const res = await fetch(`/api/battles/${state.battleId}/surrender`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ player_id: state.user.player_id })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            alert(data.detail || 'Не удалось сдаться');
+            return;
+        }
+
+        stopPolling();
+        await pollBattleState();
+        showGameOverModal(false);
+    } catch (e) {
+        alert('Ошибка при сдаче боя: ' + e.message);
+    }
+}
+
+function showGameOverModal(isWinner) {
+    const modal = document.getElementById('modal-gameover');
+    const title = document.getElementById('gameover-title');
+    const icon = document.getElementById('gameover-icon');
+    const desc = document.getElementById('gameover-desc');
+    const stats = modal.querySelector('.modal-stats');
+
+    if (isWinner) {
+        icon.textContent = '🏆';
+        title.textContent = 'Славная Победа!';
+        title.style.color = '#34d399';
+        desc.textContent = 'Все существа противника повержены! Результаты зафиксированы в БД Oracle.';
+        if (stats) {
+            stats.innerHTML = '<div>+120 EXP</div><div>+60 Монет 🪙</div><div>+25 Elo 🛡️</div>';
+        }
+    } else {
+        icon.textContent = '💀';
+        title.textContent = 'Поражение';
+        title.style.color = '#f87171';
+        desc.textContent = 'Бой завершился поражением. Тренируйтесь в Академии и возвращайтесь сильнее!';
+        if (stats) {
+            stats.innerHTML = '<div style="color: #94a3b8">+35 EXP</div><div style="color: #f87171">-25 Elo 🛡️</div>';
+        }
+    }
+
+    modal.classList.remove('hidden');
+}
+

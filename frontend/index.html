@@ -3,365 +3,518 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Покемон-баттл</title>
+    <title>Покемон-баттл: Стихийные Сражения (Oracle RPG)</title>
     <link rel="stylesheet" href="/static/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
     <div id="app" class="app-container">
+        <!-- ГЛАВНАЯ ШАПКА -->
         <header class="main-header">
             <div class="logo-group">
-                <span class="logo-badge">RPG</span>
-                <h1 class="logo-title">Покемон-баттл</h1>
-                <span class="logo-sub">Prototype</span>
+                <span class="logo-badge">RPG 2.0</span>
+                <h1 class="logo-title">ПОКЕМОН-БАТТЛ</h1>
+                <span class="logo-sub">Oracle Edition</span>
             </div>
-
-            <div id="header-user-info" class="header-user" hidden>
+            
+            <div id="header-user-info" class="header-user hidden">
                 <div class="user-badge">
-                    <span class="user-avatar-mini">🧑</span>
+                    <span class="user-avatar-mini">🧙‍♂️</span>
                     <div>
                         <span id="header-username" class="user-name">Тренер</span>
                         <div class="user-sub-stats">
-                            <span>Монеты: <b id="header-coins">0</b></span>
+                            <span class="stat-pill-coin">🪙 <b id="header-coins">0</b></span>
+                            <span class="stat-pill-elo">🏆 <b id="header-elo">1000</b></span>
+                            <span class="role-pill">GAME_PLAYER_ROLE</span>
                         </div>
                     </div>
                 </div>
-
-                <button id="btn-logout" class="btn-sm btn-outline">
-                    Выйти
-                </button>
+                <button id="btn-logout" class="btn-sm btn-outline">Выйти</button>
             </div>
         </header>
 
-        <nav id="main-nav" class="main-nav" hidden>
-            <button
-                class="nav-tab active"
-                data-tab="screen-lobby"
-                type="button">
-                Арена
-            </button>
-
-            <button
-                class="nav-tab"
-                data-tab="screen-profile"
-                type="button">
-                Профиль
-            </button>
-
-            <button
-                class="nav-tab"
-                data-tab="screen-pokemon"
-                type="button">
-                Мои покемоны
+        <!-- НАВИГАЦИОННОЕ МЕНЮ (ПОСЛЕ АВТОРИЗАЦИИ) -->
+        <nav id="main-nav" class="main-nav hidden">
+            <button class="nav-tab active" data-tab="screen-lobby">⚔️ Бои и Арена</button>
+            <button class="nav-tab" data-tab="screen-profile">👤 Профиль и Инвентарь</button>
+            <button class="nav-tab" data-tab="screen-editor">🛠️ Редактор Команды</button>
+            <button class="nav-tab" data-tab="screen-catch">🔮 Алтарь Ловли</button>
+            <button class="nav-tab" data-tab="screen-leaderboard">🏆 Рейтинг Сезона</button>
+            <button class="nav-tab nav-easter-egg" data-tab="screen-math">
+                <span class="sparkle">✨</span> 🎓 Академия (Таблица Умножения)
             </button>
         </nav>
 
-        <main>
-            <section id="screen-login" class="screen active">
-                <div class="auth-wrapper glass-panel">
-                    <div class="auth-tabs">
-                        <button
-                            id="tab-auth-login"
-                            class="auth-tab active"
-                            type="button"
-                            onclick="switchAuthTab('login')">
-                            Вход
-                        </button>
-
-                        <button
-                            id="tab-auth-register"
-                            class="auth-tab"
-                            type="button"
-                            onclick="switchAuthTab('register')">
-                            Регистрация
-                        </button>
-                    </div>
-
-                    <div id="pane-login" class="auth-pane active">
-                        <div class="auth-icon-ring">
-                            🛡️
-                        </div>
-
-                        <h2>Вход в игру</h2>
-
-                        <p class="subtitle">
-                            Введите данные тренера, чтобы продолжить
-                        </p>
-
-                        <form id="form-login" class="auth-form">
-                            <div class="input-group">
-                                <label for="input-username">
-                                    Имя пользователя
-                                </label>
-
-                                <input
-                                    id="input-username"
-                                    name="username"
-                                    type="text"
-                                    placeholder="Например: PLAYER1"
-                                    required>
-                            </div>
-
-                            <div class="input-group">
-                                <label for="input-password">
-                                    Пароль
-                                </label>
-
-                                <input
-                                    id="input-password"
-                                    name="password"
-                                    type="password"
-                                    placeholder="Введите пароль"
-                                    required>
-                            </div>
-
-                            <button
-                                type="submit"
-                                class="btn-primary btn-block">
-                                Войти
-                            </button>
-                        </form>
-                    </div>
-
-                    <div id="pane-register" class="auth-pane">
-                        <div class="auth-icon-ring ring-nature">
-                            ⚡
-                        </div>
-
-                        <h2>Новый тренер</h2>
-
-                        <p class="subtitle">
-                            Создайте аккаунт и выберите первого покемона
-                        </p>
-
-                        <form id="form-register" class="auth-form">
-                            <div class="input-group">
-                                <label for="reg-username">
-                                    Имя пользователя
-                                </label>
-
-                                <input
-                                    id="reg-username"
-                                    name="username"
-                                    type="text"
-                                    placeholder="Например: MISTY"
-                                    required>
-                            </div>
-
-                            <div class="input-group">
-                                <label for="reg-display-name">
-                                    Имя тренера
-                                </label>
-
-                                <input
-                                    id="reg-display-name"
-                                    name="display_name"
-                                    type="text"
-                                    placeholder="Как вас будут видеть другие игроки"
-                                    required>
-                            </div>
-
-                            <div class="input-group">
-                                <label for="reg-password">
-                                    Пароль
-                                </label>
-
-                                <input
-                                    id="reg-password"
-                                    name="password"
-                                    type="password"
-                                    placeholder="Придумайте пароль"
-                                    required>
-                            </div>
-
-                            <div class="input-group">
-                                <label for="starter-pokemon">
-                                    Стартовый покемон
-                                </label>
-
-                                <select
-                                    id="starter-pokemon"
-                                    name="starter_template_id"
-                                    required>
-                                    <option value="1">
-                                        Игнизавр — огонь
-                                    </option>
-                                    <option value="6">
-                                        Листокрыл — трава
-                                    </option>
-                                    <option value="11">
-                                        Аквадонт — вода
-                                    </option>
-                                    <option value="16">
-                                        Террагот — земля
-                                    </option>
-                                </select>
-                            </div>
-
-                            <button
-                                type="submit"
-                                class="btn-primary btn-block">
-                                Зарегистрироваться
-                            </button>
-                        </form>
-                    </div>
-
-                    <div id="login-status-box" class="status-box" hidden></div>
+        <!-- ================================================================= -->
+        <!-- 1. ЭКРАН ВХОДА И РЕГИСТРАЦИИ (РЯДОМ) -->
+        <!-- ================================================================= -->
+        <section id="screen-login" class="screen active">
+            <div class="auth-wrapper glass-panel">
+                <div class="auth-tabs">
+                    <button id="tab-auth-login" class="auth-tab active" onclick="switchAuthTab('login')">Вход в Игру</button>
+                    <button id="tab-auth-register" class="auth-tab" onclick="switchAuthTab('register')">Регистрация Тренера</button>
                 </div>
-            </section>
 
-            <section id="screen-lobby" class="screen">
-                <div class="profile-layout">
-                    <div class="profile-card">
-                        <h2>Арена</h2>
-
-                        <p class="subtitle">
-                            Здесь будут находиться доступные игровые режимы.
-                        </p>
-
-                        <button
-                            id="btn-create-battle"
-                            class="btn-primary btn-block"
-                            type="button">
-                            Создать бой
-                        </button>
-
-                        <button
-                            id="btn-bot-battle"
-                            class="btn-outline btn-block"
-                            type="button">
-                            Бой с ботом
-                        </button>
+                <!-- ФОРМА ВХОДА -->
+                <div id="pane-login" class="auth-pane active">
+                    <div class="auth-icon-ring">
+                        <span class="element-icon">🛡️</span>
                     </div>
+                    <h2>Вход на Арену</h2>
+                    <p class="subtitle">Подключение к серверу Oracle DB с проверкой роли <code>GAME_PLAYER_ROLE</code></p>
 
-                    <div class="unlocks-card">
-                        <h2>Открытые игры</h2>
-
-                        <div id="battles-list">
-                            <p class="subtitle">
-                                Пока нет открытых боёв.
-                            </p>
+                    <form id="form-login" class="auth-form">
+                        <div class="input-group">
+                            <label for="input-username">Пользователь Oracle DB:</label>
+                            <input type="text" id="input-username" required placeholder="Например: PLAYER1" value="PLAYER1">
+                        </div>
+                        <div class="input-group">
+                            <label for="input-password">Пароль:</label>
+                            <input type="password" id="input-password" required placeholder="Пароль" value="Player1Password#123">
                         </div>
 
-                        <button
-                            id="btn-refresh-battles"
-                            class="btn-sm btn-outline"
-                            type="button">
-                            Обновить список
+                        <div class="quick-login-pills">
+                            <span class="pill-label">Быстрый вход:</span>
+                            <button type="button" class="pill-btn" onclick="setQuickLogin('PLAYER1', 'Player1Password#123')">PLAYER1 (Эш)</button>
+                            <button type="button" class="pill-btn" onclick="setQuickLogin('PLAYER2', 'Player2Password#123')">PLAYER2 (Гари)</button>
+                        </div>
+
+                        <button type="submit" class="btn-primary btn-block mt-3">
+                            <span>Подключиться к СУБД Oracle</span>
+                            <span class="btn-arrow">→</span>
                         </button>
+                    </form>
+                </div>
+
+                <!-- ФОРМА РЕГИСТРАЦИИ -->
+                <div id="pane-register" class="auth-pane">
+                    <div class="auth-icon-ring ring-nature">
+                        <span class="element-icon">⚡</span>
+                    </div>
+                    <h2>Новый Тренер</h2>
+                    <p class="subtitle">Создание аккаунта Oracle, выдача стартового покемона и роли <code>GAME_PLAYER_ROLE</code></p>
+
+                    <form id="form-register" class="auth-form">
+                        <div class="input-group">
+                            <label for="reg-username">Логин (Имя пользователя в БД Oracle):</label>
+                            <input type="text" id="reg-username" required placeholder="Например: MISTY" pattern="[A-Za-z0-9_]+" title="Латинские буквы и цифры">
+                        </div>
+                        <div class="input-group">
+                            <label for="reg-display-name">Отображаемое имя тренера:</label>
+                            <input type="text" id="reg-display-name" required placeholder="Например: Мисти Водная Звезда">
+                        </div>
+                        <div class="input-group">
+                            <label for="reg-password">Пароль:</label>
+                            <input type="password" id="reg-password" required placeholder="Придумайте пароль" minlength="4">
+                        </div>
+
+                        <div class="input-group">
+                            <label>Выберите стартового покемона:</label>
+                            <div class="starter-selection-grid">
+                                <label class="starter-choice selected">
+                                    <input type="radio" name="starter_elem" value="1" checked>
+                                    <div class="starter-box fire">
+                                        <span class="starter-ico">🦎</span>
+                                        <strong>Игнизавр</strong>
+                                        <small>🔥 Огонь</small>
+                                    </div>
+                                </label>
+                                <label class="starter-choice">
+                                    <input type="radio" name="starter_elem" value="6">
+                                    <div class="starter-box grass">
+                                        <span class="starter-ico">🦋</span>
+                                        <strong>Листокрыл</strong>
+                                        <small>🌿 Трава</small>
+                                    </div>
+                                </label>
+                                <label class="starter-choice">
+                                    <input type="radio" name="starter_elem" value="11">
+                                    <div class="starter-box water">
+                                        <span class="starter-ico">🐢</span>
+                                        <strong>Аквадонт</strong>
+                                        <small>💧 Вода</small>
+                                    </div>
+                                </label>
+                                <label class="starter-choice">
+                                    <input type="radio" name="starter_elem" value="16">
+                                    <div class="starter-box earth">
+                                        <span class="starter-ico">🦏</span>
+                                        <strong>Террагот</strong>
+                                        <small>⛰️ Земля</small>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-primary btn-block mt-3">
+                            <span>Зарегистрироваться и Войти</span>
+                            <span class="btn-arrow">→</span>
+                        </button>
+                    </form>
+                </div>
+
+                <div id="login-status-box" class="status-box hidden"></div>
+            </div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- 2. ЭКРАН ЛОББИ: БОИ И АРЕНА (PvP / PvE) -->
+        <!-- ================================================================= -->
+        <section id="screen-lobby" class="screen">
+            <div class="lobby-grid">
+                <!-- Левая колонка: Активная боевая тройка -->
+                <div class="lobby-left">
+                    <div class="panel-card glass-panel">
+                        <div class="panel-header">
+                            <h3>Боевая Тройка (Активная)</h3>
+                            <button class="btn-sm btn-outline" onclick="switchNavTab('screen-editor')">Настроить 🛠️</button>
+                        </div>
+                        <div id="my-team-container" class="team-cards-list">
+                            <!-- Карточки активных покемонов -->
+                        </div>
+
+                        <!-- Интерактивный справочник стихий -->
+                        <div class="elemental-guide mt-4">
+                            <h4>Матрица Стихийных Взаимодействий</h4>
+                            <div class="elemental-grid">
+                                <div class="element-tag tag-fire">🔥 Огонь: Бьёт 🌿 Траву (x1.5), Слаб к 💧 Воде (x0.7)</div>
+                                <div class="element-tag tag-grass">🌿 Трава: Бьёт 💧 Воду (x1.5) и ⛰️ Землю (x1.4), Слаба к 🔥 Огню (x0.7)</div>
+                                <div class="element-tag tag-water">💧 Вода: Бьёт 🔥 Огонь (x1.5) и ⛰️ Землю (x1.2), Слаба к 🌿 Траве (x0.7)</div>
+                                <div class="element-tag tag-earth">⛰️ Земля: Бьёт 🔥 Огонь (x1.4), Слаба к 🌿 Траве (x0.7)</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </section>
 
-            <section id="screen-profile" class="screen">
-                <div class="profile-card">
+                <!-- Правая колонка: Режимы боев -->
+                <div class="lobby-right">
+                    <div class="panel-card glass-panel">
+                        <div class="panel-header">
+                            <h3>Выбор Режима Сражения</h3>
+                        </div>
+                        
+                        <div class="lobby-action-buttons">
+                            <button id="btn-create-battle" class="btn-action btn-fire">
+                                <span class="btn-symbol">⚔️</span>
+                                <span class="btn-text">
+                                    <strong>Создать PvP-бой 1 на 1</strong>
+                                    <small>Сражение против реального игрока за рейтинг Elo</small>
+                                </span>
+                            </button>
+
+                            <button id="btn-bot-battle" class="btn-action btn-nature">
+                                <span class="btn-symbol">🤖</span>
+                                <span class="btn-text">
+                                    <strong>PvE: Битва с ИИ (Ботом)</strong>
+                                    <small>Тренировочный бой против алгоритма</small>
+                                </span>
+                            </button>
+                        </div>
+
+                        <div class="panel-header mt-4">
+                            <h3>Открытые бои игроков (Таблица BATTLES)</h3>
+                            <button id="btn-refresh-battles" class="btn-icon" title="Обновить">🔄</button>
+                        </div>
+                        <div id="battles-list" class="battles-table-wrap">
+                            <div class="empty-state">Нет открытых боев. Нажмите «Создать PvP-бой»!</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- 3. ЭКРАН ПРОФИЛЯ, ИНВЕНТАРЯ И ОТКРЫТЫХ ГЕРОЕВ -->
+        <!-- ================================================================= -->
+        <section id="screen-profile" class="screen">
+            <div class="profile-layout">
+                <!-- Карточка тренера -->
+                <div class="panel-card glass-panel profile-card">
                     <div class="profile-header-banner">
-                        <div class="profile-avatar-big">
-                            🧑
-                        </div>
-
-                        <div>
-                            <h2 id="prof-display-name">
-                                Имя тренера
-                            </h2>
-
+                        <div class="profile-avatar-big">🧙‍♂️</div>
+                        <div class="profile-title-block">
+                            <h2 id="prof-display-name">Имя Тренера</h2>
                             <div class="profile-badges-row">
-                                <span class="badge-role">
-                                    Тренер
-                                </span>
-
-                                <span class="badge-league">
-                                    Новичок
-                                </span>
+                                <span class="badge-role">GAME_PLAYER_ROLE</span>
+                                <span id="prof-season-badge" class="badge-league">BRONZE</span>
                             </div>
                         </div>
                     </div>
 
-                    <div class="profile-stats-grid">
-                        <div class="pstat-item">
-                            <span
-                                id="profile-level"
-                                class="pstat-val">
-                                1
-                            </span>
-
-                            <span class="pstat-lbl">
-                                Уровень
-                            </span>
+                    <!-- Статистика и прогресс-бар -->
+                    <div class="exp-section mt-3">
+                        <div class="exp-labels">
+                            <span>Уровень тренера: <b id="prof-level">1</b></span>
+                            <span>Опыт: <b id="prof-exp-text">0 / 100</b> (<span id="prof-exp-percent">0%</span>)</span>
                         </div>
-
-                        <div class="pstat-item">
-                            <span
-                                id="profile-wins"
-                                class="pstat-val">
-                                0
-                            </span>
-
-                            <span class="pstat-lbl">
-                                Победы
-                            </span>
-                        </div>
-
-                        <div class="pstat-item">
-                            <span
-                                id="profile-losses"
-                                class="pstat-val">
-                                0
-                            </span>
-
-                            <span class="pstat-lbl">
-                                Поражения
-                            </span>
-                        </div>
-
-                        <div class="pstat-item">
-                            <span
-                                id="profile-coins"
-                                class="pstat-val">
-                                0
-                            </span>
-
-                            <span class="pstat-lbl">
-                                Монеты
-                            </span>
+                        <div class="exp-bar-track">
+                            <div id="prof-exp-fill" class="exp-bar-fill" style="width: 0%"></div>
                         </div>
                     </div>
-                </div>
-            </section>
 
-            <section id="screen-pokemon" class="screen">
-                <div class="unlocks-card">
+                    <div class="profile-stats-grid mt-3">
+                        <div class="pstat-item">
+                            <span class="pstat-val" id="prof-elo">1000</span>
+                            <span class="pstat-lbl">Рейтинг Elo 🛡️</span>
+                        </div>
+                        <div class="pstat-item">
+                            <span class="pstat-val" id="prof-coins">150</span>
+                            <span class="pstat-lbl">Монеты 🪙</span>
+                        </div>
+                        <div class="pstat-item">
+                            <span class="pstat-val" id="prof-battles">0 / 0</span>
+                            <span class="pstat-lbl">Победы / Поражения</span>
+                        </div>
+                        <div class="pstat-item">
+                            <span class="pstat-val" id="prof-winrate">0%</span>
+                            <span class="pstat-lbl">Винрейт</span>
+                        </div>
+                    </div>
+
+                    <!-- Инвентарь тренера -->
+                    <div class="panel-header mt-4">
+                        <h3>Ваш Инвентарь (Таблица PLAYER_INVENTORY)</h3>
+                    </div>
+                    <div id="profile-inventory-list" class="inventory-list">
+                        <!-- Список предметов -->
+                    </div>
+                </div>
+
+                <!-- Разблокировка героев по уровням -->
+                <div class="panel-card glass-panel unlocks-card">
                     <div class="panel-header">
-                        <h2>Мои покемоны</h2>
+                        <h3>Древо Открытия Героев за Уровень</h3>
+                        <span class="hero-counter">Доступно: <b id="prof-unlocked-count">4</b></span>
+                    </div>
+                    <p class="text-dim text-sm mb-3">Повышайте уровень тренера, чтобы разблокировать доступ к новым мощным существам стихий!</p>
+                    
+                    <div id="unlocked-heroes-grid" class="heroes-grid">
+                        <!-- Карточки героев по уровням -->
+                    </div>
+                </div>
+            </div>
+        </section>
 
-                        <button
-                            id="btn-refresh-pokemon"
-                            class="btn-sm btn-outline"
-                            type="button">
-                            Обновить
-                        </button>
+        <!-- ================================================================= -->
+        <!-- 4. ЭКРАН РЕДАКТОРА КОМАНДЫ И ЭВОЛЮЦИИ СУЩЕСТВ -->
+        <!-- ================================================================= -->
+        <section id="screen-editor" class="screen">
+            <div class="panel-card glass-panel">
+                <div class="panel-header">
+                    <div>
+                        <h2>Редактор Персонажей и Команды</h2>
+                        <p class="subtitle">Выберите до 3 активных существ в боевой состав, меняйте клички и проводите эволюцию при достижении уровня.</p>
+                    </div>
+                    <button class="btn-primary" onclick="loadEditorData()">🔄 Обновить</button>
+                </div>
+
+                <div id="editor-creatures-grid" class="editor-grid">
+                    <!-- Карточки всех покемонов с редактированием клички и эволюцией -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- 5. ЭКРАН ЛОВЛИ И ПРИЗЫВА НОВЫХ СУЩЕСТВ -->
+        <!-- ================================================================= -->
+        <section id="screen-catch" class="screen">
+            <div class="catch-altar-wrap glass-panel text-center">
+                <div class="altar-orb">🔮</div>
+                <h2>Магический Алтарь Ловли</h2>
+                <p class="subtitle">Призовите случайное дикое существо стихии в свою коллекцию! Доступные виды зависят от вашего уровня.</p>
+
+                <div class="altar-cost-card">
+                    <span>Стоимость призыва:</span>
+                    <strong class="cost-val">60 🪙</strong>
+                    <span class="text-dim">У вас: <b id="altar-user-coins">150</b> 🪙</span>
+                </div>
+
+                <button id="btn-do-catch" class="btn-primary btn-large mt-3">
+                    <span>✨ Совершить Призыв</span>
+                </button>
+
+                <div id="catch-result-box" class="catch-result hidden"></div>
+            </div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- 6. ПАСХАЛКА: СЕКРЕТНАЯ АКАДЕМИЯ (ТАБЛИЦА УМНОЖЕНИЯ) -->
+        <!-- ================================================================= -->
+        <section id="screen-math" class="screen">
+            <div class="math-card glass-panel text-center">
+                <div class="math-badge">🎓 СЕКРЕТНАЯ ПАСХАЛКА</div>
+                <h2>Магическая Академия Тренеров</h2>
+                <p class="subtitle">Решайте примеры из таблицы умножения! За каждый правильный ответ вы мгновенно получаете опыт (EXP), монеты, а ваша боевая команда получает +1 уровень!</p>
+
+                <div class="math-streak-bar">
+                    <span>Серия верных ответов:</span>
+                    <strong id="math-streak" class="streak-val">0 🔥</strong>
+                </div>
+
+                <div class="math-problem-box">
+                    <span id="math-num1" class="problem-num">7</span>
+                    <span class="problem-op">×</span>
+                    <span id="math-num2" class="problem-num">8</span>
+                    <span class="problem-eq">=</span>
+                    <span class="problem-q">?</span>
+                </div>
+
+                <form id="form-math" class="math-form">
+                    <input type="number" id="input-math-answer" required placeholder="Введите ответ..." autofocus autocomplete="off">
+                    <button type="submit" class="btn-primary">Ответить 🚀</button>
+                </form>
+
+                <div id="math-feedback" class="status-box hidden"></div>
+            </div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- 7. ЭКРАН ТАБЛИЦЫ ЛИДЕРОВ (СЕЗОНЫ ELO) -->
+        <!-- ================================================================= -->
+        <section id="screen-leaderboard" class="screen">
+            <div class="panel-card glass-panel">
+                <div class="panel-header">
+                    <div>
+                        <h2>Рейтинговый Сезон: Таблица Лидеров</h2>
+                        <p class="subtitle">Официальный рейтинг Elo тренеров Oracle RPG. Сражайтесь в PvP, побеждайте и поднимайтесь в дивизион Алмаз!</p>
+                    </div>
+                    <button class="btn-sm btn-outline" onclick="loadLeaderboard()">🔄 Обновить</button>
+                </div>
+
+                <div class="leaderboard-table-wrap">
+                    <table class="leaderboard-table">
+                        <thead>
+                            <tr>
+                                <th># Ранг</th>
+                                <th>Тренер</th>
+                                <th>Уровень</th>
+                                <th>Дивизион</th>
+                                <th>Elo Рейтинг</th>
+                                <th>Побед / Поражений</th>
+                                <th>Винрейт</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboard-tbody">
+                            <!-- Строки таблицы лидеров -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- 8. ЭКРАН БОЕВОЙ АРЕНЫ (1 НА 1) -->
+        <!-- ================================================================= -->
+        <section id="screen-battle" class="screen">
+            <div class="battle-arena-container">
+                <div class="battle-top-bar glass-panel">
+                    <div class="battle-meta">
+                        <span class="battle-tag">Бой #<span id="battle-display-id">--</span></span>
+                        <span class="battle-tag">Ход: <span id="battle-turn-num">1</span></span>
+                    </div>
+                    <div id="battle-turn-indicator" class="turn-indicator">
+                        Ожидание хода...
+                    </div>
+                    <div class="battle-controls">
+                        <button id="btn-surrender-battle" class="btn-sm btn-danger-outline" title="Сдаться досрочно с фиксацией поражения">🏳️ Сдаться</button>
+                        <button id="btn-leave-battle" class="btn-sm btn-outline">В лобби</button>
+                    </div>
+                </div>
+
+                <div class="arena-stage">
+                    <!-- Сторона противника -->
+                    <div class="team-arena-side opponent-side">
+                        <div class="side-header">
+                            <h4 id="opponent-name">Противник</h4>
+                            <span class="side-role">Защитник</span>
+                        </div>
+                        <div id="opponent-creatures-grid" class="creatures-arena-grid">
+                            <!-- Существа противника -->
+                        </div>
                     </div>
 
-                    <div
-                        id="my-pokemon-list"
-                        class="heroes-grid">
-                        <div class="hero-unlock-card">
-                            <div class="profile-avatar-big">
-                                🐾
-                            </div>
+                    <div class="arena-center-divider">
+                        <div class="vs-badge">VS</div>
+                    </div>
 
-                            <div>
-                                <h3>Покемоны не загружены</h3>
-                                <p class="subtitle">
-                                    Войдите в игру, чтобы увидеть команду.
-                                </p>
-                            </div>
+                    <!-- Сторона игрока -->
+                    <div class="team-arena-side player-side">
+                        <div class="side-header">
+                            <h4 id="player-name">Вы (Игрок)</h4>
+                            <span class="side-role">Атакующий</span>
+                        </div>
+                        <div id="player-creatures-grid" class="creatures-arena-grid">
+                            <!-- Существа игрока -->
                         </div>
                     </div>
                 </div>
-            </section>
-        </main>
+
+                <!-- Панель управления действиями и лог боя -->
+                <div class="battle-bottom-panel">
+                    <div class="action-panel glass-panel">
+                        <div class="action-panel-header">
+                            <span class="action-title">Панель Действий</span>
+                            <span id="selected-creatures-hint" class="selection-hint">Выберите атакующего и цель</span>
+                        </div>
+
+                        <div class="action-buttons-group">
+                            <button id="btn-action-attack" class="btn-battle-action btn-attack" disabled>
+                                <span class="act-icon">⚡</span>
+                                <span class="act-text">
+                                    <strong>Стихийная Атака</strong>
+                                    <small id="elem-preview-text">Урон с учётом стихий</small>
+                                </span>
+                            </button>
+
+                            <button id="btn-action-heal" class="btn-battle-action btn-heal" disabled>
+                                <span class="act-icon">🧪</span>
+                                <span class="act-text">
+                                    <strong>Выпить Зелье</strong>
+                                    <small>Восстановить 40 HP (тратит ход)</small>
+                                </span>
+                            </button>
+
+                            <button id="btn-action-surrender" class="btn-battle-action btn-surrender">
+                                <span class="act-icon">🏳️</span>
+                                <span class="act-text">
+                                    <strong>Сдаться Досрочно</strong>
+                                    <small>Гарантированное поражение</small>
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="combat-log-panel glass-panel">
+                        <div class="log-header">
+                            <span>Летопись Битвы (Таблица BATTLE_TURNS)</span>
+                            <span class="live-dot" title="Синхронизация"></span>
+                        </div>
+                        <div id="combat-log-content" class="combat-log-list">
+                            <div class="log-entry system">Бой начался!</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- МОДАЛКА ФИНАЛА БОЯ -->
+        <div id="modal-gameover" class="modal-overlay hidden">
+            <div class="modal-box glass-panel text-center">
+                <div id="gameover-icon" class="modal-big-icon">🏆</div>
+                <h2 id="gameover-title">Победа!</h2>
+                <p id="gameover-desc">Все существа противника повержены. Данные зафиксированы в БД Oracle.</p>
+                <div class="modal-stats">
+                    <div>+120 EXP</div>
+                    <div>+60 Монет 🪙</div>
+                    <div>+25 Elo 🛡️</div>
+                </div>
+                <button id="btn-gameover-return" class="btn-primary mt-4">Вернуться в Лобби</button>
+            </div>
+        </div>
     </div>
 
-    <script src="/static/script.js"></script>
+    <script src="/static/app.js"></script>
 </body>
 </html>
