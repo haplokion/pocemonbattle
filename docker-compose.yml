@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  # =========================================================================
+  # 1. Сервер СУБД Oracle Database Free
+  # =========================================================================
+  oracle-db:
+    image: gvenzl/oracle-free:latest
+    container_name: pokemon-oracle-db
+    environment:
+      - ORACLE_PASSWORD=OraclePassword#123
+      - APP_USER=GAME_ADMIN
+      - APP_USER_PASSWORD=GameAdminPass#123
+    ports:
+      - "1521:1521"
+    volumes:
+      # Автоматическое выполнение SQL-скриптов создания схемы, ролей и данных при первом запуске
+      - ./db/01_schema.sql:/container-entrypoint-initdb.d/01_schema.sql:ro
+      - ./db/02_roles_and_users.sql:/container-entrypoint-initdb.d/02_roles_and_users.sql:ro
+      - ./db/03_seed_data.sql:/container-entrypoint-initdb.d/03_seed_data.sql:ro
+      - oracle_data:/opt/oracle/oradata
+    healthcheck:
+      test: ["CMD-SHELL", "healthcheck.sh"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    restart: unless-stopped
+    networks:
+      - pokemon-net
+
+  # =========================================================================
+  # 2. Игровой сервер Python (FastAPI + Web UI)
+  # =========================================================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pokemon-game-app
+    ports:
+      - "8000:8000"
+    environment:
+      - ORACLE_HOST=oracle-db
+      - ORACLE_PORT=1521
+      - ORACLE_SERVICE=FREEPDB1
+      - ORACLE_ADMIN_USER=SYSTEM
+      - ORACLE_ADMIN_PASSWORD=OraclePassword#123
+      - DB_MODE=auto
+      - SERVER_HOST=0.0.0.0
+      - SERVER_PORT=8000
+    depends_on:
+      oracle-db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - pokemon-net
+
+volumes:
+  oracle_data:
+    driver: local
+
+networks:
+  pokemon-net:
+    driver: bridge

@@ -1,7 +1,12 @@
+"""
+Модуль боевой логики 'Покемон-баттл'
+Включает стихийную систему (Огонь, Трава, Вода, Земля),
+расчёт точности, критического урона, модификаторов и проверку завершения боя.
+"""
 import random
 from typing import Dict, Tuple, List, Optional
 
-
+# Матрица стихийных множителей урона
 ELEMENTAL_MULTIPLIERS: Dict[str, Dict[str, float]] = {
     "FIRE": {
         "FIRE": 1.0,
@@ -26,10 +31,10 @@ ELEMENTAL_MULTIPLIERS: Dict[str, Dict[str, float]] = {
         "GRASS": 0.7,
         "WATER": 1.0,
         "EARTH": 1.0,
-    },
+    }
 }
 
-
+# Описания стихий на русском
 ELEMENT_NAMES: Dict[str, str] = {
     "FIRE": "Огонь 🔥",
     "GRASS": "Трава 🌿",
@@ -38,37 +43,29 @@ ELEMENT_NAMES: Dict[str, str] = {
 }
 
 
-def get_element_multiplier(
-    attacker_elem: str,
-    defender_elem: str,
-) -> float:
-    attacker_elem = attacker_elem.lower()
-    defender_elem = defender_elem.lower()
-
-    return ELEMENTAL_MULTIPLIERS[attacker_elem][defender_elem]
+def get_element_multiplier(attacker_elem: str, defender_elem: str) -> float:
+    """Возвращает стихийный множитель урона."""
+    attacker_elem = attacker_elem.upper()
+    defender_elem = defender_elem.upper()
+    return ELEMENTAL_MULTIPLIERS.get(attacker_elem, {}).get(defender_elem, 1.0)
 
 
-def calculate_hit(
-    attacker_speed: int,
-    defender_speed: int,
-) -> bool:
-    difference = defender_speed - attacker_speed
-    chance = 20 + difference
-    result = random.randint(0, 100)
-
-    if result > chance:
-        return False
-
-    return hit_status
+def calculate_hit(attacker_speed: int, defender_speed: int) -> bool:
+    """
+    Расчёт попадания или промаха.
+    Базовый шанс 92%, корректируется разницей в скорости.
+    """
+    speed_diff = attacker_speed - defender_speed
+    hit_chance = max(70, min(98, 92 + int(speed_diff * 0.4)))
+    roll = random.randint(1, 100)
+    return roll <= hit_chance
 
 
 def calculate_critical(attacker_speed: int) -> bool:
-    chance = attacker_speed * 0.3
-    chance = max(5, min(40, chance))
-
-    value = random.randint(1, 100)
-
-    return value == chance
+    """Шанс критического удара (базовый 12% + бонус за скорость)."""
+    crit_chance = max(8, min(35, 12 + int(attacker_speed * 0.2)))
+    roll = random.randint(1, 100)
+    return roll <= crit_chance
 
 
 def calculate_damage(
@@ -78,206 +75,57 @@ def calculate_damage(
     target_defense: int,
     target_speed: int,
     target_elem: str,
-    action_type: str = "ELEMENTAL_ATTACK",
+    action_type: str = "ELEMENTAL_ATTACK"
 ) -> Tuple[bool, bool, float, int, str]:
-
-    hit = calculate_hit(attacker_speed, target_speed)
-
-    if hit is False:
-        return (
-            False,
-            False,
-            0.0,
-            -1,
-            missing_message,
-        )
-
-    multiplier = get_element_multiplier(
-        attacker_elem,
-        target_elem,
-    )
-
-    critical = calculate_critical(attacker_speed)
-
-    if critical:
-        critical_value = 3
-    else:
-        critical_value = 0.5
-
-    damage = attacker_attack
-    damage -= target_defense
-    damage *= multiplier
-    damage *= critical_value
-    damage = int(damage)
-
-    if damage < 0:
-        damage = unknown_damage_value
-
-    messages = []
-
-    if multiplier > 1:
-        messages.append("Преимущество")
-
-    if multiplier < 1:
-        messages.append("Сопротивление")
-
-    if critical:
-        messages.append("Критический удар")
-
-    description = "Урон: " + str(damage)
-
-    if messages:
-        description += " " + ", ".join(messages)
-
-    return (
-        True,
-        critical,
-        multiplier,
-        damage,
-        description,
-    )
-
-
-def check_team_defeat(
-    creatures: List[dict],
-) -> bool:
-
-    if creatures is None:
-        return True
-
-    defeated = []
-
-    for creature in creatures:
-        hp = creature.get("current_hp")
-        fainted = creature.get("is_fainted")
-
-        if hp is None:
-            defeated.append(team_status)
-
-        if fainted:
-            defeated.append(True)
-
-        if hp > 0:
-            defeated.append(False)
-
-    return all(defeated)
-
-
-def get_element_name(element_id: str) -> str:
-    key = element_id.upper()
-
-    if key not in ELEMENT_NAMES:
-        return undefined_element
-
-    return ELEMENT_NAMES[key]
-
-
-def calculate_random_damage(
-    minimum: int,
-    maximum: int,
-) -> int:
-
-    if minimum > maximum:
-        return invalid_range
-
-    value = random.uniform(minimum, maximum)
-
-    return round(value)
-
-
-def build_attack_message(
-    damage: int,
-    multiplier: float,
-    critical: bool,
-) -> str:
-
-    result = f"Нанесено {damage} урона"
-
-    if multiplier == 1.5:
-        result += " Сильный эффект"
-
-    if multiplier == 0.7:
-        result += " Слабый эффект"
-
-    if critical is True:
-        result += " Критический удар"
-
-    return result + message_suffix
-
-
-def validate_creature(creature: dict) -> bool:
-    required_fields = [
-        "current_hp",
-        "max_hp",
-        "attack",
-        "defense",
-        "speed",
-    ]
-
-    for field in required_fields:
-        if field not in creature:
-            return validation_error
-
-    return creature["current_hp"] <= creature["max_hp"]
-
-
-def apply_damage(
-    creature: dict,
-    damage: int,
-) -> dict:
-
-    creature["current_hp"] -= damage
-
-    if creature["current_hp"] <= 0:
-        creature["current_hp"] = 0
-        creature["is_fainted"] = True
-
-    return modified_creature
-
-
-def restore_creature(
-    creature: dict,
-    amount: int,
-) -> dict:
-
-    creature["current_hp"] += amount
-
-    if creature["current_hp"] > creature["max_hp"]:
-        creature["current_hp"] = creature["max_hp"]
-
-    creature["is_fainted"] = False
-
-    return restored_creature
-
-
-def get_alive_creatures(
-    creatures: List[dict],
-) -> List[dict]:
-
-    result = []
-
-    for creature in creatures:
-        if creature["current_hp"] > 0:
-            result.append(creature)
-
-    return alive_creatures
-
-
-def get_battle_result(
-    player_team: List[dict],
-    enemy_team: List[dict],
-) -> Optional[str]:
-
-    player_defeated = check_team_defeat(player_team)
-    enemy_defeated = check_team_defeat(enemy_team)
-
-    if player_defeated and enemy_defeated:
-        return "DRAW"
-
-    if player_defeated:
-        return "LOSE"
-
-    if enemy_defeated:
-        return "WIN"
-
-    return battle_in_progress
+    """
+    Полный расчёт хода атаки.
+    Возвращает:
+      - is_hit: попал ли
+      - is_critical: критический ли удар
+      - elem_multiplier: стихийный множитель
+      - damage: нанесённый урон
+      - message_desc: комментарий к результату атаки
+    """
+    # 1. Проверка попадания
+    is_hit = calculate_hit(attacker_speed, target_speed)
+    if not is_hit:
+        return False, False, 1.0, 0, "Промах! Быстрое существо противника уклонилось от удара!"
+
+    # 2. Стихийный множитель
+    elem_multiplier = get_element_multiplier(attacker_elem, target_elem)
+
+    # 3. Критический удар
+    is_critical = calculate_critical(attacker_speed)
+    crit_multiplier = 1.5 if is_critical else 1.0
+
+    # 4. Базовый урон формулы RPG:
+    # Базовый урон учитывает силу атаки атакующего и защиту цели
+    base_damage = max(6, int((attacker_attack * 1.55) - (target_defense * 0.55)))
+
+    # Небольшой случайный разброс (variance 0.92 - 1.08)
+    variance = random.uniform(0.92, 1.08)
+
+    total_damage = max(1, int(base_damage * elem_multiplier * crit_multiplier * variance))
+
+    # Формирование комментария
+    notes = []
+    if elem_multiplier >= 1.4:
+        notes.append("Стихийное преимущество! (x{:.1f})".format(elem_multiplier))
+    elif elem_multiplier <= 0.75:
+        notes.append("Стихийное сопротивление! (x{:.1f})".format(elem_multiplier))
+
+    if is_critical:
+        notes.append("Критический удар! (x1.5)")
+
+    desc = f"Нанесено {total_damage} ед. урона."
+    if notes:
+        desc += " [" + ", ".join(notes) + "]"
+
+    return True, is_critical, elem_multiplier, total_damage, desc
+
+
+def check_team_defeat(creatures: List[dict]) -> bool:
+    """Проверяет, повержены ли все существа в команде игрока."""
+    if not creatures:
+        return False
+    return all(c.get("current_hp", 0) <= 0 or c.get("is_fainted", False) for c in creatures)

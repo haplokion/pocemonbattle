@@ -11,3 +11,9 @@ venv/
 .venv/
 env/
 
+# IDE
+.vscode/
+.idea/
+
+# Docker
+.docker/
