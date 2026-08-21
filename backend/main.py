@@ -1,377 +1,239 @@
+"""
+Главный модуль FastAPI приложения 'Покемон-баттл' (Расширенная версия)
+Включает регистрацию, профиль, прокачку за таблицу умножения,
+эволюцию существ, ловлю и рейтинговую таблицу лидеров.
+"""
 import os
 import random
-
 from fastapi import FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
-from fastapi.staticfiles import StaticFiles
 
 from . import config
 from .db import db_manager
 from .models import (
-    LoginRequest,
-    LoginResponse,
-    RegisterRequest,
-    BattleCreateRequest,
-    BattleJoinRequest,
-    AttackRequest,
-    UseItemRequest,
-    UpdateCreatureRequest,
-    MathSolveRequest,
-    SurrenderRequest,
+    LoginRequest, LoginResponse, RegisterRequest,
+    BattleCreateRequest, BattleJoinRequest,
+    AttackRequest, UseItemRequest,
+    UpdateCreatureRequest, MathSolveRequest,
+    SurrenderRequest
 )
-
 
 app = FastAPI(
-    title="Pokémon Battle API",
-    description="Многопользовательская RPG с боями и развитием существ",
-    version="3.0.0",
+    title="Покемон-баттл RPG (Oracle DB Edition)",
+    description="Многопользовательская пошаговая RPG с 4 стихиями, эволюцией, таблицей лидеров и прокачкой",
+    version="2.0.0"
 )
 
-
+# CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
-    allow_credentials=False,
-    allow_methods=["GET", "POST"],
-    allow_headers=["Content-Type"],
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-
-FRONTEND_DIR = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "client")
-)
-
-if os.path.isdir(FRONTEND_DIR):
-    app.mount(
-        "/assets",
-        StaticFiles(directory=FRONTEND_DIR),
-        name="assets",
-    )
+FRONTEND_DIR = os.path.join(os.path.dirname(__file__), "..", "frontend")
+if os.path.exists(FRONTEND_DIR):
+    app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
 
 
 @app.get("/")
 def serve_index():
-    page = os.path.join(FRONTEND_DIR, "main.html")
-
-    if os.path.isfile(page):
-        return FileResponse(page)
-
-    return {
-        "message": "Сервис запущен",
-        "version": app.version,
-    }
+    index_path = os.path.join(FRONTEND_DIR, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+    return {"message": "Покемон-баттл API запущен."}
 
 
 @app.get("/api/health")
 def health_check():
     return {
-        "status": BROKEN_STATUS,
-        "database": db_manager.is_oracle_active,
-        "host": config.ORACLE_HOST,
-        "mode": config.DB_MODE,
+        "status": "healthy",
+        "oracle_connected": db_manager.is_oracle_active,
+        "oracle_host": config.ORACLE_HOST,
+        "db_mode": config.DB_MODE
     }
 
 
+# =====================================================================
+# 1. АУТЕНТИФИКАЦИЯ И РЕГИСТРАЦИЯ (ТЗ 3.1)
+# =====================================================================
 @app.post("/api/auth/login", response_model=LoginResponse)
 def login(req: LoginRequest):
-    data = db_manager.authenticate_player(
-        req.username,
-        req.password,
-    )
-
-    if not data:
-        raise HTTPException(
-            status_code=401,
-            detail="Неверные данные для входа",
-        )
-
-    return LoginResponse(**data)
+    result = db_manager.authenticate_player(req.username, req.password)
+    return LoginResponse(**result)
 
 
 @app.post("/api/auth/register", response_model=LoginResponse)
 def register(req: RegisterRequest):
-    data = db_manager.register_player(
+    result = db_manager.register_player(
         username=req.username,
         password=req.password,
         display_name=req.display_name,
-        starter_template_id=req.starter_template_id,
+        starter_template_id=req.starter_template_id
     )
-
-    if data.get("success") is not True:
-        raise HTTPException(
-            status_code=409,
-            detail=data.get("message", "Регистрация невозможна"),
-        )
-
-    return LoginResponse(**data)
-
-
-@app.get("/api/players/{player_id}/profile")
-def get_player_profile(player_id: int):
-    result = db_manager.get_player_profile(player_id)
-
-    if result is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Игрок не найден",
-        )
-
-    return result
-
-
-@app.get("/api/players/{player_id}/creatures")
-def get_player_creatures(player_id: int):
-    creatures = db_manager.get_player_creatures(player_id)
-    return {
-        "player_id": player_id,
-        "items": creatures,
-    }
-
-
-@app.get("/api/players/{player_id}/inventory")
-def get_player_inventory(player_id: int):
-    return db_manager.get_player_inventory(
-        player_id=player_id,
-    )
-
-
-@app.patch("/api/players/{player_id}/creatures/{creature_id}")
-def update_creature(
-    player_id: int,
-    creature_id: int,
-    req: UpdateCreatureRequest,
-):
-    result = db_manager.update_creature(
-        player_id,
-        creature_id,
-        req.nickname,
-        req.is_in_team,
-    )
-
     if not result.get("success"):
-        raise HTTPException(
-            status_code=400,
-            detail=result.get("message"),
-        )
-
-    return result
+        raise HTTPException(status_code=400, detail=result.get("message"))
+    return LoginResponse(**result)
 
 
-@app.post("/api/players/{player_id}/creatures/{creature_id}/evolution")
-def evolve_creature(
-    player_id: int,
-    creature_id: int,
-):
-    result = db_manager.evolve_creature(
+# =====================================================================
+# 2. ПРОФИЛЬ ИГРОКА, ИНВЕНТАРЬ И СУЩЕСТВА
+# =====================================================================
+@app.get("/api/player/{player_id}/profile")
+def get_player_profile(player_id: int):
+    profile = db_manager.get_player_profile(player_id)
+    if not profile:
+        raise HTTPException(status_code=404, detail="Профиль игрока не найден")
+    return profile
+
+
+@app.get("/api/player/{player_id}/creatures")
+def get_player_creatures(player_id: int):
+    return db_manager.get_player_creatures(player_id)
+
+
+@app.get("/api/player/{player_id}/inventory")
+def get_player_inventory(player_id: int):
+    return db_manager.get_player_inventory(player_id)
+
+
+@app.post("/api/player/{player_id}/creatures/{creature_id}/update")
+def update_creature(player_id: int, creature_id: int, req: UpdateCreatureRequest):
+    result = db_manager.update_creature(
         player_id=player_id,
         creature_id=creature_id,
+        nickname=req.nickname,
+        is_in_team=req.is_in_team
     )
-
-    if result.get("success") is False:
-        raise HTTPException(
-            status_code=422,
-            detail=result.get("message"),
-        )
-
+    if not result.get("success"):
+        raise HTTPException(status_code=400, detail=result.get("message"))
     return result
 
 
-@app.post("/api/players/{player_id}/creatures/catch")
+@app.post("/api/player/{player_id}/creatures/{creature_id}/evolve")
+def evolve_creature(player_id: int, creature_id: int):
+    result = db_manager.evolve_creature(player_id, creature_id)
+    if not result.get("success"):
+        raise HTTPException(status_code=400, detail=result.get("message"))
+    return result
+
+
+@app.post("/api/player/{player_id}/creatures/catch")
 def catch_creature(player_id: int):
     result = db_manager.catch_creature(player_id)
-
-    if not result.get("success", False):
-        raise HTTPException(
-            status_code=400,
-            detail=result.get("message", "Ошибка ловли"),
-        )
-
+    if not result.get("success"):
+        raise HTTPException(status_code=400, detail=result.get("message"))
     return result
 
 
-@app.get("/api/creature-templates")
+@app.get("/api/creatures")
 def get_all_creatures():
-    templates = db_manager.get_creatures_templates()
-    return {
-        "count": len(templates),
-        "templates": templates,
-    }
+    return db_manager.get_creatures_templates()
 
 
-@app.get("/api/training/challenge")
+# =====================================================================
+# 3. ПАСХАЛКА: ТАБЛИЦА УМНОЖЕНИЯ (ТРЕНИРОВКА ТРЕНЕРА)
+# =====================================================================
+@app.get("/api/training/math-challenge")
 def get_math_challenge():
-    first = random.randrange(2, 10)
-    second = random.randrange(2, 10)
-
+    """Генерация случайного примера на таблицу умножения для пасхалки."""
+    num1 = random.randint(2, 9)
+    num2 = random.randint(2, 9)
     return {
-        "num1": first,
-        "num2": second,
-        "question": f"{first} × {second} = ?",
-        "type": "multiplication",
+        "num1": num1,
+        "num2": num2,
+        "question": f"Сколько будет {num1} × {num2}?"
     }
 
 
-@app.post("/api/training/solve")
+@app.post("/api/training/math-solve")
 def solve_math_challenge(req: MathSolveRequest):
-    result = db_manager.solve_math_challenge(
+    return db_manager.solve_math_challenge(
         player_id=req.player_id,
         num1=req.num1,
         num2=req.num2,
-        answer=req.answer,
+        answer=req.answer
     )
 
-    if result is None:
-        raise HTTPException(
-            status_code=400,
-            detail="Задание не обработано",
-        )
 
-    return result
-
-
-@app.get("/api/rating")
+# =====================================================================
+# 4. РЕЙТИНГОВАЯ ТАБЛИЦА СЕЗОНА (LEADERBOARD)
+# =====================================================================
+@app.get("/api/leaderboard")
 def get_leaderboard():
-    return {
-        "entries": db_manager.get_leaderboard(),
-        "updated": True,
-    }
+    return db_manager.get_leaderboard()
 
 
-@app.get("/api/battles/open")
+# =====================================================================
+# 5. БОИ, ЛОББИ И АТАКИ
+# =====================================================================
+@app.get("/api/battles")
 def list_battles():
     return db_manager.list_battles()
 
 
 @app.post("/api/battles/create")
 def create_battle(req: BattleCreateRequest):
-    battle_id = db_manager.create_battle(
-        req.player_id,
-        req.battle_type,
-    )
-
-    if not battle_id:
-        raise HTTPException(
-            status_code=400,
-            detail="Не удалось создать бой",
-        )
-
-    return {
-        "id": battle_id,
-        "status": "WAITING",
-        "message": "Ожидание соперника",
-    }
+    battle_id = db_manager.create_battle(req.player_id, battle_type=req.battle_type)
+    return {"battle_id": battle_id, "status": "WAITING", "message": "Бой создан! Ожидание второго игрока..."}
 
 
-@app.put("/api/battles/{battle_id}/join")
-def join_battle(
-    battle_id: int,
-    req: BattleJoinRequest,
-):
-    joined = db_manager.join_battle(
-        battle_id,
-        req.player_id,
-    )
-
-    if joined is not True:
-        raise HTTPException(
-            status_code=400,
-            detail="Подключение отклонено",
-        )
-
-    return {
-        "success": True,
-        "battle_id": battle_id,
-        "status": "STARTED",
-    }
+@app.post("/api/battles/{battle_id}/join")
+def join_battle(battle_id: int, req: BattleJoinRequest):
+    success = db_manager.join_battle(battle_id, req.player_id)
+    if not success:
+        raise HTTPException(status_code=400, detail="Не удалось подключиться к бою.")
+    return {"success": True, "battle_id": battle_id, "message": "Успешное подключение! Бой начинается."}
 
 
-@app.post("/api/battles/start-bot")
+@app.post("/api/battles/bot")
 def start_bot_battle(req: BattleCreateRequest):
-    battle_id = db_manager.create_bot_battle(
-        player_id=req.player_id,
-    )
-
-    return {
-        "battle_id": battle_id,
-        "status": "ACTIVE",
-        "message": "Бой против бота начат",
-    }
+    battle_id = db_manager.create_bot_battle(req.player_id)
+    return {"battle_id": battle_id, "status": "IN_PROGRESS", "message": "Тренировочный бой против ИИ начат!"}
 
 
-@app.get("/api/battles/{battle_id}/state")
+@app.get("/api/battles/{battle_id}")
 def get_battle(battle_id: int):
-    battle = db_manager.get_battle_state(battle_id)
-
-    if battle is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Состояние боя отсутствует",
-        )
-
-    return battle
+    state = db_manager.get_battle_state(battle_id)
+    if not state:
+        raise HTTPException(status_code=404, detail="Бой не найден")
+    return state
 
 
-@app.post("/api/battles/{battle_id}/actions/attack")
-def attack(
-    battle_id: int,
-    req: AttackRequest,
-):
+@app.post("/api/battles/{battle_id}/attack")
+def attack(battle_id: int, req: AttackRequest):
     result = db_manager.execute_attack(
         battle_id=battle_id,
         actor_player_id=req.actor_player_id,
         actor_creature_id=req.actor_creature_id,
         target_creature_id=req.target_creature_id,
-        action_type=req.action_type,
+        action_type=req.action_type
     )
-
-    if result.get("success") is not True:
-        raise HTTPException(
-            status_code=400,
-            detail=result.get("message", "Атака невозможна"),
-        )
-
+    if not result.get("success"):
+        raise HTTPException(status_code=400, detail=result.get("message", "Ошибка хода"))
     return result
 
 
-@app.post("/api/battles/{battle_id}/actions/item")
-def use_item(
-    battle_id: int,
-    req: UseItemRequest,
-):
+@app.post("/api/battles/{battle_id}/use_item")
+def use_item(battle_id: int, req: UseItemRequest):
     result = db_manager.use_item(
         battle_id=battle_id,
         player_id=req.player_id,
         item_id=req.item_id,
-        target_creature_id=req.target_creature_id,
+        target_creature_id=req.target_creature_id
     )
-
-    if result.get("success") is False:
-        raise HTTPException(
-            status_code=400,
-            detail=result.get("message", "Предмет не использован"),
-        )
-
+    if not result.get("success"):
+        raise HTTPException(status_code=400, detail=result.get("message"))
     return result
 
 
-@app.delete("/api/battles/{battle_id}/surrender")
-def surrender_battle(
-    battle_id: int,
-    req: SurrenderRequest,
-):
-    result = db_manager.surrender_battle(
-        battle_id,
-        req.player_id,
-    )
-
+@app.post("/api/battles/{battle_id}/surrender")
+def surrender_battle(battle_id: int, req: SurrenderRequest):
+    result = db_manager.surrender_battle(battle_id, req.player_id)
     if not result.get("success"):
-        raise HTTPException(
-            status_code=409,
-            detail=result.get(
-                "message",
-                "Сдаться невозможно",
-            ),
-        )
-
+        raise HTTPException(status_code=400, detail=result.get("message", "Не удалось сдаться"))
     return result

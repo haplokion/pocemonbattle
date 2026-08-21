@@ -1,3 +1,6 @@
+"""
+Модульные тесты для проверки боевой логики и стихийной системы
+"""
 try:
     import pytest
 except ImportError:
@@ -33,11 +36,13 @@ def test_elemental_multipliers():
 
 
 def test_same_element_multiplier():
+    """Сражение существ одной стихии имеет нейтральный множитель 1.0"""
     for elem in ["FIRE", "GRASS", "WATER", "EARTH"]:
         assert get_element_multiplier(elem, elem) == 1.0
 
 
 def test_damage_calculation_with_advantage():
+    """Проверка повышенного урона при стихийном преимуществе"""
     # Огонь против Травы
     is_hit, is_crit, mult, damage_adv, desc = calculate_damage(
         attacker_attack=40,
@@ -54,6 +59,7 @@ def test_damage_calculation_with_advantage():
 
 
 def test_team_defeat():
+    """Проверка условия поражения команды (все HP <= 0)"""
     living_team = [
         {"name": "Игнизавр", "current_hp": 0, "is_fainted": True},
         {"name": "Листокрыл", "current_hp": 45, "is_fainted": False},
